@@ -33,12 +33,13 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           target: tester
+          tags: test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Run tests
         run: |
-          docker run ${{steps.build-tests.outputs.imageid}}
+          docker run test
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -54,4 +55,3 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }},latest
           cache-from: type=gha
-          cache-to: type=gha,mode=max
