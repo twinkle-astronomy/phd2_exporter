@@ -5,7 +5,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}:latest
 
 jobs:
   build-and-push-image:
@@ -28,31 +28,53 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build tests
-        id: build-tests
-        uses: docker/build-push-action@v5
-        with:
-          target: tester
-          tags: test-image:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      
-      - name: Run tests
-        uses: addnab/docker-run-action@v3
-        with:
-          image: test-image:latest
-          
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      
+      - name: Build tests
+        run: |
+          docker build --target tester -t phd2_exporter_tests .
 
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          target: phd2_exporter-release
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }},latest
-          cache-from: type=gha
+      - name: Run tests
+        run: |
+          docker run phd2_exporter_tests
+  
+      - name: Build release
+        run: |
+          docker build --target release -t ${{ steps.meta.outputs.tags }} .
+
+      - name: Publish
+        run: |
+          docker push ${{ steps.meta.outputs.tags }}
+
+      # - name: Build tests
+      #   id: build-tests
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     target: tester
+      #     tags: test-image:latest
+      #     cache-from: type=gha
+      #     cache-to: type=gha,mode=max
+      
+      # - name: Run tests
+      #   uses: addnab/docker-run-action@v3
+      #   with:
+      #     image: test-image:latest
+          
+      # - name: Extract metadata (tags, labels) for Docker
+      #   id: meta
+      #   uses: docker/metadata-action@v5
+      #   with:
+      #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      # - name: Build and push
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     target: phd2_exporter-release
+      #     push: true
+      #     tags: ${{ steps.meta.outputs.tags }}
+      #     labels: ${{ steps.meta.outputs.labels }}
+      #     cache-from: type=gha
