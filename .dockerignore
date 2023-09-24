@@ -1,7 +1,4 @@
-./automation/
-./fits_inspect/images
 ./target/
 ./.git/
-*.fits
 .bash_history
 Dockerfile

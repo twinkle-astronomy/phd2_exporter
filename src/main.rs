@@ -2,7 +2,7 @@ mod config;
 mod metrics;
 use std::fs::File;
 
-use log::{debug, error};
+use log::debug;
 use metrics::Metrics;
 
 use clap::Parser;

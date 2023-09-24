@@ -1,34 +1,41 @@
-FROM rust:1.72-buster as dev
-
-RUN apt-get update && apt-get install -y --no-install-recommends libcfitsio-dev libopencv-dev clang libclang-dev && rm -rf /var/lib/apt/lists/*
+FROM rust:1.72-buster as base
+RUN rustup target add x86_64-unknown-linux-musl
 
 RUN mkdir /app
-ENV HOME="/app"
 WORKDIR /app
 
-
-#This user schenanigans allows for local development
-ARG USER=app
+ARG USER=phd2_exporter
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 
 RUN groupadd -g ${GROUP_ID} ${USER} && \
-    useradd -l -u ${USER_ID} -g ${USER} ${USER}
+    useradd -l -m -u ${USER_ID} -g ${USER} ${USER}
 
 RUN chown ${USER}:${USER} /app
 USER ${USER}
 
-from dev as phd2_exporter_builder
+COPY Cargo.toml Cargo.lock /app/
+
+FROM base as dev
+
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    tig \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+USER ${USER}
+
+FROM base as builder
 COPY . /app
-RUN rustup target add x86_64-unknown-linux-musl
-RUN cargo install --target x86_64-unknown-linux-musl --path ./phd2_exporter
+RUN cargo build --release --target x86_64-unknown-linux-musl 
 
-from dev as indi_exporter_builder
-COPY . /app
-RUN cargo install --path ./indi_exporter
+FROM builder as tester
+CMD ["cargo", "test", "--release", "--target", "x86_64-unknown-linux-musl"]
 
-FROM debian:bullseye-slim as indi_exporter-release
-COPY --from=indi_exporter_builder /usr/local/cargo/bin/indi_exporter /usr/local/bin/
+FROM builder as installer
+RUN cargo install --target x86_64-unknown-linux-musl --path .
 
-FROM scratch as phd2_exporter-release
-COPY --from=phd2_exporter_builder /usr/local/cargo/bin/phd2_exporter /usr/local/bin/phd2_exporter
+FROM scratch as release
+COPY --from=installer --chown=root:root /usr/local/cargo/bin/phd2_exporter /bin/phd2_exporter
+ENTRYPOINT [ "/bin/phd2_exporter" ]

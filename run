@@ -1,0 +1,9 @@
+#!/bin/bash
+
+touch $(git rev-parse --show-cdup).bash_history
+
+export DOCKER_USER=$(basename $(git rev-parse --show-toplevel))
+export DOCKER_USER_ID=$(id -u)
+export DOCKER_GROUP_ID=$(id -g) 
+
+exec "$@"

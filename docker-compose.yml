@@ -1,57 +1,18 @@
 version: '3.7'
 
-volumes:
-    prometheus_data: {}
-    grafana_data: {}
-
 services:
-  prometheus:
-    image: prom/prometheus:v2.36.2
-    volumes:
-      - ./prometheus/:/etc/prometheus/
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - 9090:9090
-
-  grafana:
-    image: grafana/grafana
-    depends_on:
-      - prometheus
-    ports:
-      - 3000:3000
-    volumes:
-      - grafana_data:/var/lib/grafana
-
-  indi_exporter:
-    image: indi_exporter
-    restart: always
-    build:
-      context: .
-      target: dev
-    volumes:
-      - .:/app
-    command:
-      "cargo run --bin indi_exporter -- ${INDI_EXPORTER_ARGS:-host.docker.internal:7624}"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - 9186:9186
-
   phd2_exporter:
+    user: "${DOCKER_USER_ID}:${DOCKER_GROUP_ID}"
     image: phd2_exporter
-    restart: always
     build:
-      context: .
       target: dev
+      args:
+        USER: ${DOCKER_USER}
+        USER_ID: ${DOCKER_USER_ID}
+        GROUP_ID: ${DOCKER_GROUP_ID}
     volumes:
-      - .:/app
-    command:
-      "cargo run --bin phd2_exporter -- ${PHD2_EXPORTER_ARGS:-host.docker.internal:4400}"
+      - ${PWD}:/app
+      - ${PWD}/.bash_history:/home/phd2_exporter/.bash_history
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

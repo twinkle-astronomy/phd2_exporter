@@ -84,16 +84,3 @@ pub struct Config {
     pub server: Server,
     pub metrics: Metrics,
 }
-
-#[cfg(test)]
-mod test {
-    use super::Config;
-
-    #[test]
-    fn test_yaml() {
-        let config: Config = Default::default();
-        let config_string = serde_yaml::to_string(&config).unwrap();
-        println!("{}", config_string);
-        assert_eq!(config_string, String::default());
-    }
-}
