@@ -13,6 +13,9 @@ RUN apt-get update
 RUN rustup target add ${TARGET}
 RUN rustup toolchain install stable-${ARCH}-unknown-linux-gnu
 
+RUN apt-get install -y --no-install-recommends \
+    gcc-aarch64-linux-gnu
+
 RUN groupadd -g ${GROUP_ID} ${USER} && \
     useradd -l -m -u ${USER_ID} -g ${USER} ${USER}
 
@@ -27,13 +30,11 @@ USER root
 RUN apt-get install -y --no-install-recommends \
     git \
     tig \
-    vim \
-    && rm -rf /var/lib/apt/lists/*
+    vim 
 USER ${USER}
 
 FROM base as builder
 COPY . /app
-
 RUN cargo build --release --target ${TARGET}
 
 FROM builder as tester
