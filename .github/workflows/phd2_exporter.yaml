@@ -36,11 +36,12 @@ jobs:
           tags: test
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
+      
       - name: Run tests
-        run: |
-          docker run test
-
+        uses: addnab/docker-run-action@v3
+        with:
+          image: test-image:latest
+          
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
