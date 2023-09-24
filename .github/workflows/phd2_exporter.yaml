@@ -27,12 +27,6 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
       
       - name: Build tests
         run: |
@@ -44,11 +38,11 @@ jobs:
   
       - name: Build release
         run: |
-          docker build --target release -t ${{ steps.meta.outputs.tags }} .
+          docker build --target release -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} .
 
       - name: Publish
         run: |
-          docker push ${{ steps.meta.outputs.tags }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       # - name: Build tests
       #   id: build-tests
