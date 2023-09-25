@@ -6,4 +6,4 @@ export DOCKER_USER=$(basename $(git rev-parse --show-toplevel))
 export DOCKER_USER_ID=$(id -u)
 export DOCKER_GROUP_ID=$(id -g) 
 
-exec "$@"
+exec docker compose run "$@"

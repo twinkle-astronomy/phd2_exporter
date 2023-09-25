@@ -1,11 +1,13 @@
 name: Create and publish a phd2_exporter docker image
 
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - v.*
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}:latest
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+  VERSION: $GITHUB_REF_NAME
 
 jobs:
   build-and-push-image:
@@ -39,8 +41,10 @@ jobs:
   
       - name: Build release
         run: |
-          docker build --target release -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} .
+          docker build --target release -t ${{ env.IMAGE_NAME }}:latest .
+          docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
 
       - name: Publish
         run: |
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          docker push ${{ env.IMAGE_NAME }}:latest
+          docker push${{ env.IMAGE_NAME }}:${{ env.VERSION }}

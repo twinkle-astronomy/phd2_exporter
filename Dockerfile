@@ -26,7 +26,8 @@ USER root
 RUN apt-get install -y --no-install-recommends \
     git \
     tig \
-    vim 
+    vim \
+    jq
 USER ${USER}
 
 FROM base as builder

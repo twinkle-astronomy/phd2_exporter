@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+
+exec git tag "v$(cargo metadata --format-version 1 |jq -r '.packages[] | select(.name == "phd2_exporter") | .version')"
