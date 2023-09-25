@@ -1,4 +1,4 @@
-FROM rust:1.72-buster as base
+FROM --platform=$BUILDPLATFORM rust:1.72-buster as base
 
 ARG ARCH=x86_64
 ARG USER=phd2_exporter
@@ -38,7 +38,8 @@ COPY . /app
 RUN cargo build --release --target ${TARGET}
 
 FROM builder as tester
-CMD ["cargo", "test", "--release", "--target", ${TARGET}]
+ENV TARGET=${TARGET}
+CMD cargo test --release --target $TARGET
 
 FROM builder as installer
 RUN cargo install --target ${TARGET} --path .
