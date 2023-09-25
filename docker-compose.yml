@@ -7,7 +7,7 @@ services:
     build:
       target: dev
       args:
-        USER: ${DOCKER_USER}
+        USER: phd2_exporter
         USER_ID: ${DOCKER_USER_ID}
         GROUP_ID: ${DOCKER_GROUP_ID}
     volumes:

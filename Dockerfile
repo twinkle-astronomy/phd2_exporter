@@ -1,20 +1,16 @@
-FROM --platform=$BUILDPLATFORM rust:1.72-buster as base
+FROM rust:1.72-buster as base
 
-ARG ARCH=x86_64
 ARG USER=phd2_exporter
 ARG USER_ID=1000
 ARG GROUP_ID=1000
-ARG TARGET=${ARCH}-unknown-linux-musl
+ARG TARGET=x86_64-unknown-linux-musl
 
 RUN mkdir /app
 WORKDIR /app
 
 RUN apt-get update
 RUN rustup target add ${TARGET}
-RUN rustup toolchain install stable-${ARCH}-unknown-linux-gnu
-
-RUN apt-get install -y --no-install-recommends \
-    gcc-aarch64-linux-gnu
+RUN rustup toolchain install stable-x86_64-unknown-linux-gnu
 
 RUN groupadd -g ${GROUP_ID} ${USER} && \
     useradd -l -m -u ${USER_ID} -g ${USER} ${USER}

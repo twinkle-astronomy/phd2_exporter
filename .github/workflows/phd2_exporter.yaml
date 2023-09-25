@@ -31,7 +31,7 @@ jobs:
       
       - name: Build tests
         run: |
-          docker build --platform linux/x86_64 --build-arg ARCH=x86_64 --target tester -t phd2_exporter_tests .
+          docker build --target tester -t phd2_exporter_tests .
 
       - name: Run tests
         run: |
@@ -39,7 +39,7 @@ jobs:
   
       - name: Build release
         run: |
-          docker build --platform linux/x86_64 --build-arg ARCH=x86_64  --target release -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} .
+          docker build --target release -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} .
 
       - name: Publish
         run: |
