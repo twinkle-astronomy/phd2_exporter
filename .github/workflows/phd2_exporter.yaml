@@ -3,7 +3,7 @@ name: Create and publish a phd2_exporter docker image
 on:
   push:
     tags:
-      - 'v.*'
+      - 'v*'
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
