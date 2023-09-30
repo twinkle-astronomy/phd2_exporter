@@ -7,7 +7,6 @@ use prometheus_exporter::prometheus::{
     exponential_buckets, histogram_opts, linear_buckets, opts, register_gauge_vec,
     register_histogram_vec,
 };
-use tokio::sync::broadcast::error::RecvError;
 
 pub struct Metrics {
     // guide_distance: GenericGaugeVec<AtomicF64>,
@@ -194,12 +193,9 @@ impl Metrics {
 
     pub async fn async_run<T: Send + tokio::io::AsyncRead + tokio::io::AsyncWrite>(
         self,
-        mut connection: Phd2Connection<T>,
-    ) -> Result<(), tokio::sync::broadcast::error::RecvError> {
-        let mut recv = match connection.subscribe().await {
-            Some(recv) => recv,
-            None => return Err(tokio::sync::broadcast::error::RecvError::Closed),
-        };
+        connection: Phd2Connection<T>,
+        mut recv: tokio::sync::mpsc::Receiver<ServerEvent>,
+    ) -> () {
 
         if let Ok(scale) = connection.get_pixel_scale().await {
             self.pixel_scale.with_label_values(&[]).set(scale);
@@ -209,7 +205,7 @@ impl Metrics {
             let event = recv.recv().await;
             debug!(target: "phd2_events", "{:?}", &event);
             match event {
-                Ok(event) => {
+                Some(event) => {
                     self.handle_event(&event);
 
                     match &event.event {
@@ -221,8 +217,7 @@ impl Metrics {
                         _ => {}
                     }
                 }
-                Err(RecvError::Closed) => return Ok(()),
-                Err(e) => return Err(e),
+                None => return (),
             }
         }
     }

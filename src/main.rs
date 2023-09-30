@@ -45,9 +45,10 @@ async fn main() {
 
     let metrics = Metrics::new();
 
-    let phd2: Phd2Connection<_> = TcpStream::connect(&config.server.address)
+    let (phd2, events): (Phd2Connection<_>, _) = Phd2Connection::from(
+        TcpStream::connect(&config.server.address)
         .await
         .expect(format!("Connecting to '{}'", config.server.address).as_str())
-        .into();
-    metrics.async_run(phd2).await.unwrap();
+    );
+    metrics.async_run(phd2, events).await;
 }
