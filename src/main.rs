@@ -1,8 +1,8 @@
 mod config;
 mod metrics;
-use std::fs::File;
+use std::{fs::File, time::Duration};
 
-use log::debug;
+use log::{error, info, warn};
 use metrics::Metrics;
 
 use clap::Parser;
@@ -16,6 +16,20 @@ struct Args {
     config: Option<String>,
 }
 
+async fn run_loop(config: &config::Config, metrics: &Metrics) {
+    let connection = match TcpStream::connect(&config.server.address).await {
+        Ok(c) => c,
+        Err(e) => {
+            error!("Error connecting to phd2: {}", e);
+            return;
+        }
+    };
+
+    metrics.connected.with_label_values(&[]).set(1.0);
+    let (phd2, events): (Phd2Connection<_>, _) = Phd2Connection::from(connection);
+    metrics.async_run(phd2, events).await;
+}
+
 #[tokio::main]
 async fn main() {
     env_logger::builder().parse_env("LOG").init();
@@ -27,7 +41,7 @@ async fn main() {
             match file {
                 Ok(file) => serde_yaml::from_reader(file).expect("Reading config file"),
                 Err(err) => {
-                    debug!(
+                    warn!(
                         "Unable to open config file, attempting to create one: {:?}",
                         err
                     );
@@ -41,14 +55,16 @@ async fn main() {
         None => Default::default(),
     };
 
-    prometheus_exporter::start(config.server.listen.parse().unwrap()).unwrap();
+    prometheus_exporter::start(config.server.listen.parse().unwrap())
+        .expect("Starting prometheus server");
 
     let metrics = Metrics::new();
+    loop {
+        info!("Connecting to {}", config.server.address);
+        run_loop(&config, &metrics).await;
+        metrics.connected.with_label_values(&[]).set(0.0);
 
-    let (phd2, events): (Phd2Connection<_>, _) = Phd2Connection::from(
-        TcpStream::connect(&config.server.address)
-        .await
-        .expect(format!("Connecting to '{}'", config.server.address).as_str())
-    );
-    metrics.async_run(phd2, events).await;
+        info!("Disconnected, waiting 1s to reconnect");
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
 }

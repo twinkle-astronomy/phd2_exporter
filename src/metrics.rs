@@ -9,6 +9,8 @@ use prometheus_exporter::prometheus::{
 };
 
 pub struct Metrics {
+    pub connected: prometheus_exporter::prometheus::GaugeVec,
+
     // guide_distance: GenericGaugeVec<AtomicF64>,
     guide_snr: prometheus_exporter::prometheus::GaugeVec,
     guide_snr_histo: prometheus_exporter::prometheus::HistogramVec,
@@ -30,6 +32,7 @@ pub struct Metrics {
 
 impl Metrics {
     pub fn new() -> Self {
+        let connected = register_gauge_vec!(opts!("phd2_connected", "Status of connection to phd2"), &[]).unwrap();
         let guide_snr =
             register_gauge_vec!(opts!("phd2_guide_snr", "Guide snr"), &["host", "mount",]).unwrap();
 
@@ -119,6 +122,7 @@ impl Metrics {
         .unwrap();
 
         Metrics {
+            connected,
             guide_snr,
             guide_snr_histo,
             guide_star_mass,
@@ -192,11 +196,10 @@ impl Metrics {
     }
 
     pub async fn async_run<T: Send + tokio::io::AsyncRead + tokio::io::AsyncWrite>(
-        self,
+        &self,
         connection: Phd2Connection<T>,
         mut recv: tokio::sync::mpsc::Receiver<ServerEvent>,
     ) -> () {
-
         if let Ok(scale) = connection.get_pixel_scale().await {
             self.pixel_scale.with_label_values(&[]).set(scale);
         }
