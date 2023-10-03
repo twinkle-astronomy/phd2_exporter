@@ -16,7 +16,7 @@ struct Args {
     config: Option<String>,
 }
 
-async fn run_loop(config: &config::Config, metrics: &Metrics) {
+async fn run_loop(config: &config::Config, metrics: &mut Metrics) {
     let connection = match TcpStream::connect(&config.server.address).await {
         Ok(c) => c,
         Err(e) => {
@@ -58,10 +58,10 @@ async fn main() {
     prometheus_exporter::start(config.server.listen.parse().unwrap())
         .expect("Starting prometheus server");
 
-    let metrics = Metrics::new();
+    let mut metrics = Metrics::new();
     loop {
         info!("Connecting to {}", config.server.address);
-        run_loop(&config, &metrics).await;
+        run_loop(&config, &mut metrics).await;
         metrics.connected.with_label_values(&[]).set(0.0);
 
         info!("Disconnected, waiting 1s to reconnect");

@@ -1,3 +1,6 @@
 target/
 .bash_history
 
+# ignore our local phd configs
+config.yml
+config.yaml
