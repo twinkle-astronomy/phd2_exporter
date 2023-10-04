@@ -31,9 +31,6 @@ pub struct Metrics {
     is_settling_metric: prometheus_exporter::prometheus::GaugeVec,
 
     pixel_scale: prometheus_exporter::prometheus::GaugeVec,
-
-    is_dithering: bool,
-    is_settling: bool,
 }
 
 impl Metrics {
@@ -44,7 +41,7 @@ impl Metrics {
                 "phd2_guide_snr",
                 "Guide snr"
             ),
-            &["host", "mount", "is_dithering", "is_settling",]
+            &["host", "mount",]
         )
         .unwrap();
 
@@ -54,13 +51,13 @@ impl Metrics {
                 "Histogram of snr",
                 linear_buckets(10.0, 5.0, 50).unwrap()
             ),
-            &["host", "mount", "is_dithering", "is_settling",]
+            &["host", "mount",]
         )
         .unwrap();
 
         let guide_star_mass = register_gauge_vec!(
             opts!("phd2_guide_star_mass", "Guide star_mass"),
-            &["host", "mount", "is_dithering", "is_settling",]
+            &["host", "mount",]
         )
         .unwrap();
 
@@ -70,13 +67,13 @@ impl Metrics {
                 "Histogram of guid star mass",
                 exponential_buckets(10_000.0, 1.1, 50).unwrap()
             ),
-            &["host", "mount", "is_dithering", "is_settling",]
+            &["host", "mount",]
         )
         .unwrap();
 
         let guide_hfd = register_gauge_vec!(
             opts!("phd2_guide_hfd", "Guide star_mass"),
-            &["host", "mount", "is_dithering", "is_settling",]
+            &["host", "mount",]
         )
         .unwrap();
 
@@ -86,7 +83,7 @@ impl Metrics {
                 "Histogram of guide hfd",
                 linear_buckets(1.0, 0.1, 50).unwrap()
             ),
-            &["host", "mount", "is_dithering", "is_settling",]
+            &["host", "mount",]
         )
         .unwrap();
 
@@ -95,7 +92,7 @@ impl Metrics {
                 "phd2_ra_distance_raw",
                 "The RA distance in pixels of the guide offset vector"
             ),
-            &["host", "mount", "is_dithering", "is_settling",]
+            &["host", "mount",]
         )
         .unwrap();
 
@@ -104,7 +101,7 @@ impl Metrics {
                 "phd2_de_distance_raw",
                 "The DEC distance in pixels of the guide offset vector"
             ),
-            &["host", "mount", "is_dithering", "is_settling",]
+            &["host", "mount",]
         )
         .unwrap();
 
@@ -113,7 +110,7 @@ impl Metrics {
                 "phd2_total_distance_raw",
                 "The total distance in pixels of the guide offset vector"
             ),
-            &["host", "mount", "is_dithering", "is_settling",]
+            &["host", "mount",]
         )
         .unwrap();
 
@@ -123,7 +120,7 @@ impl Metrics {
                 "Histogram of the total distance in pixels of the guide offset vector",
                 exponential_buckets(0.01, 1.1, 100).unwrap()
             ),
-            &["host", "mount", "is_dithering", "is_settling",]
+            &["host", "mount",]
         )
         .unwrap();
 
@@ -166,83 +163,69 @@ impl Metrics {
             is_dithering_metric,
             is_settling_metric,
             pixel_scale,
-            is_dithering: false,
-            is_settling: false,
         }
     }
 
-    fn handle_event(&mut self, event: &ServerEvent) {
+    fn handle_event(&self, event: &ServerEvent) {
         match &event.event {
             Event::GuideStep(guide) => {
-                let is_dithering = match &self.is_dithering {
-                    false => "0",
-                    true => "1",
-                };
-
-                let is_settling = match &self.is_settling {
-                    false => "0",
-                    true => "1",
-                };
-
                 let snr = guide.snr;
                 // dbg!(snr);
                 self.guide_snr
-                    .with_label_values(&[&event.host, &guide.mount, is_dithering, is_settling])
+                    .with_label_values(&[&event.host, &guide.mount])
                     .set(snr);
 
                 self.guide_snr_histo
-                    .with_label_values(&[&event.host, &guide.mount, is_dithering, is_settling])
+                    .with_label_values(&[&event.host, &guide.mount])
                     .observe(snr);
 
                 let star_mass = guide.star_mass;
                 // dbg!(star_mass);
                 self.guide_star_mass
-                    .with_label_values(&[&event.host, &guide.mount, is_dithering, is_settling])
+                    .with_label_values(&[&event.host, &guide.mount])
                     .set(star_mass);
 
                 self.guide_star_mass_histo
-                    .with_label_values(&[&event.host, &guide.mount, is_dithering, is_settling])
+                    .with_label_values(&[&event.host, &guide.mount])
                     .observe(star_mass);
 
                 let hfd = guide.hfd;
                 // dbg!(hfd);
                 self.guide_hfd
-                    .with_label_values(&[&event.host, &guide.mount, is_dithering, is_settling])
+                    .with_label_values(&[&event.host, &guide.mount])
                     .set(hfd);
 
                 self.guide_hfd_histo
-                    .with_label_values(&[&event.host, &guide.mount, is_dithering, is_settling])
+                    .with_label_values(&[&event.host, &guide.mount])
                     .observe(hfd);
 
                 let ra_distance_raw = guide.ra_distance_raw;
                 self.ra_distance_raw
-                    .with_label_values(&[&event.host, &guide.mount, is_dithering, is_settling])
+                    .with_label_values(&[&event.host, &guide.mount])
                     .set(ra_distance_raw);
 
                 let de_distance_raw = guide.de_distance_raw;
                 self.de_distance_raw
-                    .with_label_values(&[&event.host, &guide.mount, is_dithering, is_settling])
+                    .with_label_values(&[&event.host, &guide.mount])
                     .set(de_distance_raw);
 
                 let total_distance_raw = (guide.ra_distance_raw * guide.ra_distance_raw
                     + guide.de_distance_raw * guide.de_distance_raw)
                     .sqrt();
                 self.total_distance_raw
-                    .with_label_values(&[&event.host, &guide.mount, is_dithering, is_settling])
+                    .with_label_values(&[&event.host, &guide.mount])
                     .set(total_distance_raw);
 
                 self.total_distance_raw_histo
-                    .with_label_values(&[&event.host, &guide.mount, is_dithering, is_settling])
+                    .with_label_values(&[&event.host, &guide.mount])
                     .observe(total_distance_raw);
             },
             Event::GuidingDithered(_) => {
-                self.is_dithering = true;
                 self.is_dithering_metric
                     .with_label_values(&[&event.host])
                     .set(1.0);
             },
             Event::SettleBegin(_) => {
-                self.is_settling = true;
                 self.is_settling_metric
                     .with_label_values(&[&event.host])
                     .set(1.0);
@@ -253,8 +236,6 @@ impl Metrics {
                     .set(1.0);
             },
             Event::SettleDone(_) => {
-                self.is_dithering = false;
-                self.is_settling = false;
                 self.is_dithering_metric
                     .with_label_values(&[&event.host])
                     .set(0.0);
@@ -267,7 +248,7 @@ impl Metrics {
     }
 
     pub async fn async_run<T: Send + tokio::io::AsyncRead + tokio::io::AsyncWrite>(
-        &mut self,
+        &self,
         connection: Phd2Connection<T>,
         mut recv: tokio::sync::mpsc::Receiver<ServerEvent>,
     ) -> () {

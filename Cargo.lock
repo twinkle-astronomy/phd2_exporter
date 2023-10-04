@@ -493,7 +493,7 @@ dependencies = [
 
 [[package]]
 name = "phd2_exporter"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "clap",
  "env_logger",
