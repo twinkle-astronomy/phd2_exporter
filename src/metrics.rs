@@ -4,9 +4,10 @@ use phd2::{
     Phd2Connection,
 };
 use prometheus_exporter::prometheus::{
-    exponential_buckets, histogram_opts, linear_buckets, opts, register_gauge_vec,
+    histogram_opts, opts, register_gauge_vec,
     register_histogram_vec,
 };
+use super::config;
 
 pub struct Metrics {
     pub connected: prometheus_exporter::prometheus::GaugeVec,
@@ -34,7 +35,7 @@ pub struct Metrics {
 }
 
 impl Metrics {
-    pub fn new() -> Self {
+    pub fn new(metrics_config: &config::Metrics) -> Self {
         let connected = register_gauge_vec!(opts!("phd2_connected", "Status of connection to phd2"), &[]).unwrap();
         let guide_snr = register_gauge_vec!(
             opts!(
@@ -49,7 +50,7 @@ impl Metrics {
             histogram_opts!(
                 "phd2_guide_snr_histo",
                 "Histogram of snr",
-                linear_buckets(10.0, 5.0, 50).unwrap()
+                metrics_config.guide_snr_histo.clone().try_into().unwrap()
             ),
             &["host", "mount",]
         )
@@ -65,7 +66,7 @@ impl Metrics {
             histogram_opts!(
                 "phd2_guide_star_mass_histo",
                 "Histogram of guid star mass",
-                exponential_buckets(10_000.0, 1.1, 50).unwrap()
+                metrics_config.guide_star_mass_histo.clone().try_into().unwrap()
             ),
             &["host", "mount",]
         )
@@ -81,7 +82,7 @@ impl Metrics {
             histogram_opts!(
                 "phd2_guide_hfd_histo",
                 "Histogram of guide hfd",
-                linear_buckets(1.0, 0.1, 50).unwrap()
+                metrics_config.guide_hfd_histo.clone().try_into().unwrap()
             ),
             &["host", "mount",]
         )
@@ -118,7 +119,7 @@ impl Metrics {
             histogram_opts!(
                 "phd2_total_distance_raw_histo",
                 "Histogram of the total distance in pixels of the guide offset vector",
-                exponential_buckets(0.01, 1.1, 100).unwrap()
+                metrics_config.total_distance_raw_histo.clone().try_into().unwrap()
             ),
             &["host", "mount",]
         )

@@ -58,7 +58,7 @@ async fn main() {
     prometheus_exporter::start(config.server.listen.parse().unwrap())
         .expect("Starting prometheus server");
 
-    let metrics = Metrics::new();
+    let metrics = Metrics::new(&config.metrics);
     loop {
         info!("Connecting to {}", config.server.address);
         run_loop(&config, &metrics).await;

@@ -39,9 +39,10 @@ impl TryFrom<HistogramBuckets> for Vec<f64> {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Metrics {
-    guide_snr_histo: HistogramBuckets,
-    guide_star_mass_histo: HistogramBuckets,
-    guide_hfd_histo: HistogramBuckets,
+    pub guide_snr_histo: HistogramBuckets,
+    pub guide_star_mass_histo: HistogramBuckets,
+    pub guide_hfd_histo: HistogramBuckets,
+    pub total_distance_raw_histo: HistogramBuckets,
 }
 
 impl Default for Metrics {
@@ -62,6 +63,11 @@ impl Default for Metrics {
                 width: 0.1,
                 count: 50,
             },
+            total_distance_raw_histo: HistogramBuckets::Exponential {
+                start: 0.01,
+                factor: 1.1,
+                count: 100,
+            }
         }
     }
 }
