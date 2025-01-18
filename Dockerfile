@@ -1,4 +1,4 @@
-FROM rust:1.72-buster as base
+FROM rust:1.80-bullseye as base
 
 ARG USER=phd2_exporter
 ARG USER_ID=1000
