@@ -477,9 +477,9 @@ checksum = "9b2a4787296e9989611394c33f193f676704af1686e70b8f8033ab5ba9a35a94"
 
 [[package]]
 name = "phd2"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bdafa1be153efbe090a2dcfb6ea6fe167f95754565cb81c99c0727c5a55aa2a"
+checksum = "d44f8dd2e7b4fe2b1b410ee1726d32e81ce4f9e95d7ade9284343b8f0638f4b7"
 dependencies = [
  "base64",
  "itertools",
@@ -493,7 +493,7 @@ dependencies = [
 
 [[package]]
 name = "phd2_exporter"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "clap",
  "env_logger",
