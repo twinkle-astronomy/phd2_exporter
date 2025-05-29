@@ -1,4 +1,4 @@
-FROM rust:1.80-bullseye as base
+FROM rust:1.86-bookworm as base
 
 ARG USER=phd2_exporter
 ARG USER_ID=1000
